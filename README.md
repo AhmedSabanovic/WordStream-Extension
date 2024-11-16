@@ -6,7 +6,7 @@
 ## Updates
 
 - **New Dataset Added**: A dataset called *RealNews* has been integrated into WordStream. This dataset originates from the [Fake and Real News Dataset on Kaggle](https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset?resource=download), which has been preprocessed for improved analysis.  
-- **Sentiment Analysis Tab**: A new tab for sentiment analysis has been introduced, allowing users to assess the sentiment of news articles.  
+- **Sentiment Analysis Tab**: A new tab for sentiment analysis has been introduced, it is a placeholder for now.  
 - **Test Version Available**: A test version showcasing how the new features might look has been added.  
 
 ### Sentiment Analysis Test Dataset:
