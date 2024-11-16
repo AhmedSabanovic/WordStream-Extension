@@ -3,7 +3,7 @@ import pandas as pd
 from textblob import TextBlob
 
 # Load the TSV file into a pandas DataFrame
-file_path = r'\Test.tsv'
+file_path = r'C:\Users\ahmed\Desktop\WordStream-master\data\FactCheck.tsv'
 df = pd.read_csv(file_path, sep='\t')
 
 # Define a function to categorize words based on sentiment
@@ -46,7 +46,7 @@ df = df[['source', 'time', 'positive', 'negative', 'neutral']]
 df = df.sort_values(by='time')
 
 # Save the modified DataFrame to a new TSV file
-output_path = r'\Processed_Sentiment_Words.tsv'
+output_path = r'C:\Users\ahmed\Desktop\WordStream-master\data\Test.tsv'
 df.to_csv(output_path, sep='\t', index=False)
 
 print("Processed file saved to:", output_path)
