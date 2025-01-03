@@ -5,33 +5,185 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Sentiment Analysis</title>
     <link rel="shortcut icon" href="images/ws.png">
-    <script src="./lib/d3.min.js"></script>
-    <script src="./lib/loaddata.js"></script>
-    <script src="./lib/d3.layout.wordstream.js"></script>
-    <script src="lib/d3.slider.js"></script>
-    <script src="./test/testutil.js"></script>
+    
+    <!-- D3 and Dependencies -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.min.js"></script>
+    
+    <!-- jQuery and UI -->
     <script src="javascripts/jquery/jquery-1.9.0.min.js"></script>
-    <script src="javascripts/msdropdown/jquery.dd.js"></script>
-    <script src="javascripts/msdropdown/select.js"></script>
-    <link rel="stylesheet" type="text/css" href="styles/msdropdown/dd.css" />
-    <link rel="stylesheet" type="text/css" href="styles/main.css" media="screen"/>
-    <link rel="stylesheet" type="text/css" href="styles/d3.slider.css">
-    <link href="styles/jquery-ui.css" rel="stylesheet" type="text/css" />
+    <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
+    
+    <!-- Styles -->
+    <link href="styles/jquery-ui.css" rel="stylesheet">
+    <style>
+        .controls {
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .slider {
+            width: 200px;
+            margin: 10px;
+        }
+        .wordcloud {
+            width: 800px;
+            height: 600px;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .word {
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .word:hover {
+            opacity: 0.7;
+        }
+        .title {
+            text-align: center;
+            padding: 20px;
+        }
+        .button {
+            padding: 8px 16px;
+            margin: 0 5px;
+            text-decoration: none;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        .button.active {
+            background: #007bff;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-<div class="title">
-    <a href="index.html" class="titleText">WordStream: Interactive Tool for Topic Evolution</a>
-    <a href="sentiment.html" class="button still" target="_blank">Sentiment Analysis</a>
-    <a href="examples.html" class="button still">Examples</a>
-    <a href="video.html" class="button still">Video</a>
-    <a href="index.html" class="button active">Demo</a>
-</div>
-<div id="content">
-    <h1>Sentiment Analysis</h1>
-    <p>Cocept image below</p>
-    <img src="media/Concept.png" alt="Concept Image">
-</div>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js'></script>
-<script type='text/javascript' src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
+    <div class="title">
+        <h1>WordStream: Sentiment Analysis</h1>
+        <nav>
+            <a href="index.html" class="button">Home</a>
+            <a href="sentiment.html" class="button active">Sentiment</a>
+            <a href="examples.html" class="button">Examples</a>
+        </nav>
+    </div>
+
+    <div class="controls">
+        <div>
+            <label>Year:</label>
+            <input type="range" id="yearSlider" class="slider" min="2004" max="2014" step="1" value="2004">
+            <span id="yearValue">2004</span>
+        </div>
+        <div>
+            <label>Positive Threshold:</label>
+            <input type="range" id="positiveThreshold" class="slider" min="0.6" max="1.0" step="0.05" value="0.7">
+            <span id="positiveValue">0.7</span>
+        </div>
+        <div>
+            <label>Negative Threshold:</label>
+            <input type="range" id="negativeThreshold" class="slider" min="0" max="0.4" step="0.05" value="0.3">
+            <span id="negativeValue">0.3</span>
+        </div>
+    </div>
+
+    <div id="wordcloud" class="wordcloud"></div>
+
+    <script>
+        // Global variables
+        let words = [];
+        const width = 800;
+        const height = 600;
+
+        // Color scale
+        const colorScale = d3.scaleSequential()
+            .domain([0, 1])
+            .interpolator(d3.interpolateRdYlGn);
+
+        // Word cloud layout
+        const layout = d3.layout.cloud()
+            .size([width, height])
+            .padding(5)
+            .rotate(() => 0)
+            .font("Arial")
+            .fontSize(d => Math.sqrt(d.frequency) * 10)
+            .on("end", draw);
+
+        // Draw function
+        function draw(words) {
+            d3.select("#wordcloud").selectAll("*").remove();
+            
+            const svg = d3.select("#wordcloud")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            svg.append("g")
+                .attr("transform", `translate(${width/2},${height/2})`)
+                .selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .attr("class", "word")
+                .style("font-size", d => `${d.size}px`)
+                .style("font-family", "Arial")
+                .style("fill", d => colorScale(d.sentiment))
+                .attr("text-anchor", "middle")
+                .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+                .text(d => d.text)
+                .on("click", handleWordClick);
+        }
+
+        // Update thresholds and year
+        function updateFilters() {
+            const posThreshold = +d3.select("#positiveThreshold").node().value;
+            const negThreshold = +d3.select("#negativeThreshold").node().value;
+            const selectedYear = +d3.select("#yearSlider").node().value;
+            
+            d3.select("#positiveValue").text(posThreshold.toFixed(2));
+            d3.select("#negativeValue").text(negThreshold.toFixed(2));
+            d3.select("#yearValue").text(selectedYear);
+            
+            const filteredWords = words.filter(d => 
+                (d.sentiment <= negThreshold || d.sentiment >= posThreshold) && d.year === selectedYear
+            ).slice(0, 20);
+            
+            layout.words(filteredWords).start();
+        }
+
+        // Word click handler
+        function handleWordClick(event, d) {
+            console.log("Word clicked:", d.text);
+            console.log("Sentiment:", d.sentiment.toFixed(2));
+            console.log("Frequency:", d.frequency);
+        }
+
+        // Load and process data
+        d3.tsv("data/WikiNews_sentiment.tsv").then(data => {
+            const uniqueWords = new Map();
+            data.forEach(d => {
+                if (!uniqueWords.has(d.text)) {
+                    uniqueWords.set(d.text, {
+                        text: d.text,
+                        sentiment: +d.sentiment,
+                        frequency: +d.frequency,
+                        year: +d.year,
+                        size: Math.sqrt(+d.frequency) * 10
+                    });
+                }
+            });
+            words = Array.from(uniqueWords.values());
+            
+            updateFilters();
+        }).catch(error => {
+            console.error("Error loading data:", error);
+        });
+
+        // Add event listeners
+        d3.select("#positiveThreshold").on("input", updateFilters);
+        d3.select("#negativeThreshold").on("input", updateFilters);
+        d3.select("#yearSlider").on("input", updateFilters);
+    </script>
 </body>
 </html>
