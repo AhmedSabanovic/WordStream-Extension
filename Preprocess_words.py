@@ -14,7 +14,7 @@ def analyze_sentiments(filepath):
 
     # Columns with text to analyze
     text_columns = ['person', 'location', 'organization', 'miscellaneous']
-    all_words = {}
+    categorized_words = {col: {} for col in text_columns}  # Store words per category
 
     # Function to clean words (remove symbols, keep letters and spaces)
     def clean_word(word):
@@ -34,33 +34,35 @@ def analyze_sentiments(filepath):
                             sentiment = analyzer.polarity_scores(cleaned_word)
                             normalized_score = (sentiment['compound'] + 1) / 2
                             
-                            if cleaned_word not in all_words:
-                                all_words[cleaned_word] = {'count': 0, 'total_sentiment': 0, 'years': set()}
-                            all_words[cleaned_word]['count'] += 1
-                            all_words[cleaned_word]['total_sentiment'] += normalized_score
-                            all_words[cleaned_word]['years'].add(year)  # Track years
+                            if cleaned_word not in categorized_words[col]:
+                                categorized_words[col][cleaned_word] = {'count': 0, 'total_sentiment': 0, 'years': set()}
+                            categorized_words[col][cleaned_word]['count'] += 1
+                            categorized_words[col][cleaned_word]['total_sentiment'] += normalized_score
+                            categorized_words[col][cleaned_word]['years'].add(year)  # Track years
 
     # Create results
     results = []
-    for word, stats in all_words.items():
-        avg_sentiment = stats['total_sentiment'] / stats['count']
-        for year in stats['years']:
-            results.append({
-                'text': word,
-                'frequency': stats['count'],
-                'sentiment': avg_sentiment,
-                'year': year
-            })
+    for category, words in categorized_words.items():
+        for word, stats in words.items():
+            avg_sentiment = stats['total_sentiment'] / stats['count']
+            for year in stats['years']:
+                results.append({
+                    'year': year,
+                    'category': category,
+                    'text': word,
+                    'frequency': stats['count'],
+                    'sentiment': avg_sentiment
+                })
 
-    # Convert to DataFrame and sort by year
+    # Convert to DataFrame and sort by year, then category, then frequency
     results_df = pd.DataFrame(results)
-    results_df = results_df.sort_values(by='year', ascending=True)
+    results_df = results_df.sort_values(by=['year', 'category', 'frequency'], ascending=[True, True, False])
 
     return results_df
 
 # Run analysis
 if __name__ == "__main__":
-    input_filepath = 'data/CrooksAndLiars.tsv' # Replace with desired dataset
+    input_filepath = 'data/CrooksAndLiars.tsv'  # Replace with desired dataset
     
     # Analyze sentiments
     df = analyze_sentiments(input_filepath)
