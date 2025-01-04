@@ -15,26 +15,47 @@
     <script src="javascripts/jquery/jquery-1.9.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
     
+    <!-- noUiSlider -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.0/nouislider.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.5.0/nouislider.min.js"></script>
+    
     <!-- Styles -->
     <link href="styles/jquery-ui.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="styles/msdropdown/dd.css"/>
+    <link rel="stylesheet" type="text/css" href="styles/d3.slider.css">
+    <link rel="stylesheet" type="text/css" href="styles/main.css" media="screen"/>
     <style>
         .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
             margin: 20px;
             padding: 10px;
             border: 1px solid #ccc;
             background: #f5f5f5;
             border-radius: 5px;
         }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center; 
+            margin: 10px;
+        }
+        .control-group label {
+            margin-bottom: 30px; 
+        }
         .slider {
             width: 200px;
             margin: 10px;
         }
         .wordcloud {
-            width: 800px;
+            width: 1000px; 
             height: 600px;
             margin: 20px auto;
             border: 1px solid #ddd;
             border-radius: 5px;
+            position: relative;
         }
         .word {
             cursor: pointer;
@@ -59,74 +80,175 @@
             background: #007bff;
             color: white;
         }
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .legend div {
+            width: 100px;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            margin: 0 5px;
+            color: white;
+        }
+        .legend .positive {
+            background: blue;
+        }
+        .legend .negative {
+            background: red;
+        }
+        .middle-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: gray; /
+        }
+        /* Modal styles */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgb(0,0,0); 
+            background-color: rgba(0,0,0,0.4); 
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .chart {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .chart svg {
+            width: 45%;
+            height: 300px;
+        }
     </style>
 </head>
 <body>
     <div class="title">
-        <h1>WordStream: Sentiment Analysis</h1>
-        <nav>
-            <a href="index.html" class="button">Home</a>
-            <a href="sentiment.html" class="button active">Sentiment</a>
-            <a href="examples.html" class="button">Examples</a>
-        </nav>
+        <a href="index.html" class="titleText">WordStream: Sentiment Analysis</a>
+        <a href="index.html" class="button still">Home</a>
+        <a href="sentiment.html" class="button active">Sentiment</a>
+        <a href="examples.html" class="button still">Examples</a>
+        <a href="video.html" class="button still">Video</a>
+        <a href="index.html" class="button still">Demo</a>
     </div>
 
     <div class="controls">
-        <div>
+        <div class="control-group">
+            <label>Dataset:</label>
+            <select id="datasetSelector">
+                <option value="WikiNews_sentiment.tsv">Wiki News</option>
+                <option value="CrooksAndLiars_sentiment.tsv">Crooks and Liars</option>
+            </select>
+        </div>
+        <div class="control-group">
             <label>Year:</label>
-            <input type="range" id="yearSlider" class="slider" min="2004" max="2014" step="1" value="2004">
-            <span id="yearValue">2004</span>
+            <div id="yearSlider" class="slider"></div>
         </div>
-        <div>
+        <div class="control-group">
             <label>Positive Threshold:</label>
-            <input type="range" id="positiveThreshold" class="slider" min="0.6" max="1.0" step="0.05" value="0.7">
-            <span id="positiveValue">0.7</span>
+            <div id="positiveThreshold" class="slider"></div>
         </div>
-        <div>
+        <div class="control-group">
             <label>Negative Threshold:</label>
-            <input type="range" id="negativeThreshold" class="slider" min="0" max="0.4" step="0.05" value="0.3">
-            <span id="negativeValue">0.3</span>
+            <div id="negativeThreshold" class="slider"></div>
         </div>
     </div>
 
-    <div id="wordcloud" class="wordcloud"></div>
+    <div id="wordcloud" class="wordcloud">
+        <div class="middle-line"></div>
+    </div>
+
+    <div class="legend">
+        <div class="positive">Positive</div>
+        <div class="negative">Negative</div>
+    </div>
+
+    <!-- Modal for word details -->
+    <div id="wordModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="wordTitle">Word Details</h2>
+            <p id="wordDetails"></p>
+            <div class="chart">
+                <div id="barChart"></div>
+                <div id="pieChart"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Global variables
         let words = [];
-        const width = 800;
+        const width = 1000; 
         const height = 600;
+        const minFontSize = 30; 
+        const maxFontSize = 50; 
+        let yearRange = { min: 2004, max: 2014 }; 
 
         // Color scale
         const colorScale = d3.scaleSequential()
             .domain([0, 1])
-            .interpolator(d3.interpolateRdYlGn);
+            .interpolator(d3.interpolateRdBu);
 
-        // Word cloud layout
-        const layout = d3.layout.cloud()
-            .size([width, height])
-            .padding(5)
+        // Word cloud layout for positive words
+        const layoutPositive = d3.layout.cloud()
+            .size([width, height / 2])
+            .padding(2) 
             .rotate(() => 0)
             .font("Arial")
-            .fontSize(d => Math.sqrt(d.frequency) * 10)
-            .on("end", draw);
+            .fontSize(d => Math.max(Math.sqrt(d.frequency) * 10, minFontSize))
+            .on("end", drawPositive);
 
-        // Draw function
-        function draw(words) {
-            d3.select("#wordcloud").selectAll("*").remove();
-            
-            const svg = d3.select("#wordcloud")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height);
+        // Word cloud layout for negative words
+        const layoutNegative = d3.layout.cloud()
+            .size([width, height / 2])
+            .padding(2) 
+            .rotate(() => 0)
+            .font("Arial")
+            .fontSize(d => Math.max(Math.sqrt(d.frequency) * 10, minFontSize))
+            .on("end", drawNegative);
+
+        // Draw function for positive words
+        function drawPositive(words) {
+            const svg = d3.select("#wordcloud svg.positive");
+            svg.selectAll("*").remove();
 
             svg.append("g")
-                .attr("transform", `translate(${width/2},${height/2})`)
+                .attr("transform", `translate(${width / 2},${height / 4})`)
                 .selectAll("text")
                 .data(words)
                 .enter().append("text")
                 .attr("class", "word")
-                .style("font-size", d => `${d.size}px`)
+                .style("font-size", d => `${Math.min(d.size, maxFontSize)}px`)
                 .style("font-family", "Arial")
                 .style("fill", d => colorScale(d.sentiment))
                 .attr("text-anchor", "middle")
@@ -135,55 +257,239 @@
                 .on("click", handleWordClick);
         }
 
+        // Draw function for negative words
+        function drawNegative(words) {
+            const svg = d3.select("#wordcloud svg.negative");
+            svg.selectAll("*").remove();
+
+            svg.append("g")
+                .attr("transform", `translate(${width / 2},${height / 4})`)
+                .selectAll("text")
+                .data(words)
+                .enter().append("text")
+                .attr("class", "word")
+                .style("font-size", d => `${Math.min(d.size, maxFontSize)}px`)
+                .style("font-family", "Arial")
+                .style("fill", d => colorScale(d.sentiment))
+                .attr("text-anchor", "middle")
+                .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
+                .text(d => d.text)
+                .on("click", handleWordClick);
+        }
+
+        // Initialize noUiSlider components
+        const yearSlider = document.getElementById('yearSlider');
+        noUiSlider.create(yearSlider, {
+            start: 2004,
+            range: {
+                min: 2004,
+                max: 2014
+            },
+            step: 1,
+            tooltips: true,
+            format: {
+                to: value => Math.round(value),
+                from: value => Math.round(value)
+            }
+        });
+
+        const positiveThreshold = document.getElementById('positiveThreshold');
+        noUiSlider.create(positiveThreshold, {
+            start: 0.7,
+            range: {
+                min: 0.6,
+                max: 1.0
+            },
+            step: 0.05,
+            tooltips: true,
+            format: {
+                to: value => value.toFixed(2),
+                from: value => parseFloat(value)
+            }
+        });
+
+        const negativeThreshold = document.getElementById('negativeThreshold');
+        noUiSlider.create(negativeThreshold, {
+            start: 0.3,
+            range: {
+                min: 0,
+                max: 0.4
+            },
+            step: 0.05,
+            tooltips: true,
+            format: {
+                to: value => value.toFixed(2),
+                from: value => parseFloat(value)
+            }
+        });
+
+        // Attach event listeners after initialization
+        yearSlider.noUiSlider.on('update', updateFilters);
+        positiveThreshold.noUiSlider.on('update', updateFilters);
+        negativeThreshold.noUiSlider.on('update', updateFilters);
+
         // Update thresholds and year
         function updateFilters() {
-            const posThreshold = +d3.select("#positiveThreshold").node().value;
-            const negThreshold = +d3.select("#negativeThreshold").node().value;
-            const selectedYear = +d3.select("#yearSlider").node().value;
+            const posThreshold = +positiveThreshold.noUiSlider.get();
+            const negThreshold = +negativeThreshold.noUiSlider.get();
+            const selectedYear = +yearSlider.noUiSlider.get();
             
             d3.select("#positiveValue").text(posThreshold.toFixed(2));
             d3.select("#negativeValue").text(negThreshold.toFixed(2));
             d3.select("#yearValue").text(selectedYear);
             
-            const filteredWords = words.filter(d => 
-                (d.sentiment <= negThreshold || d.sentiment >= posThreshold) && d.year === selectedYear
-            ).slice(0, 20);
+            const positiveWords = words.filter(d => d.sentiment >= posThreshold && d.year === selectedYear).slice(0, 20);
+            const negativeWords = words.filter(d => d.sentiment <= negThreshold && d.year === selectedYear).slice(0, 20);
             
-            layout.words(filteredWords).start();
+            layoutPositive.words(positiveWords).start();
+            layoutNegative.words(negativeWords).start();
         }
 
         // Word click handler
         function handleWordClick(event, d) {
-            console.log("Word clicked:", d.text);
-            console.log("Sentiment:", d.sentiment.toFixed(2));
-            console.log("Frequency:", d.frequency);
+            // Display the modal
+            const modal = document.getElementById("wordModal");
+            const span = document.getElementsByClassName("close")[0];
+            modal.style.display = "block";
+
+            // Set the word details
+            document.getElementById("wordTitle").innerText = `Word: ${d.text}`;
+            document.getElementById("wordDetails").innerText = `Sentiment: ${d.sentiment.toFixed(2)}\nFrequency: ${d.frequency}`;
+
+            // Add additional visualizations (example: bar chart and pie chart)
+            const barChart = document.getElementById("barChart");
+            const pieChart = document.getElementById("pieChart");
+            barChart.innerHTML = ""; // Clear previous visualizations
+            pieChart.innerHTML = ""; // Clear previous visualizations
+
+            const data = [
+                { label: "Sentiment", value: d.sentiment },
+                { label: "Frequency", value: d.frequency }
+            ];
+
+            // Bar chart
+            const barSvg = d3.select("#barChart").append("svg")
+                .attr("width", 400)
+                .attr("height", 300);
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.label))
+                .range([0, 400])
+                .padding(0.1);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value)])
+                .nice()
+                .range([300, 0]);
+
+            barSvg.append("g")
+                .selectAll("rect")
+                .data(data)
+                .enter().append("rect")
+                .attr("x", d => x(d.label))
+                .attr("y", d => y(d.value))
+                .attr("width", x.bandwidth())
+                .attr("height", d => 300 - y(d.value))
+                .attr("fill", "steelblue");
+
+            barSvg.append("g")
+                .attr("transform", "translate(0,300)")
+                .call(d3.axisBottom(x));
+
+            barSvg.append("g")
+                .call(d3.axisLeft(y));
+
+            // Pie chart
+            const pieSvg = d3.select("#pieChart").append("svg")
+                .attr("width", 400)
+                .attr("height", 300)
+                .append("g")
+                .attr("transform", "translate(200,150)");
+
+            const radius = Math.min(400, 300) / 2;
+
+            const pie = d3.pie()
+                .value(d => d.value);
+
+            const arc = d3.arc()
+                .outerRadius(radius - 10)
+                .innerRadius(0);
+
+            const pieData = pie(data);
+
+            const g = pieSvg.selectAll(".arc")
+                .data(pieData)
+                .enter().append("g")
+                .attr("class", "arc");
+
+            g.append("path")
+                .attr("d", arc)
+                .style("fill", (d, i) => d3.schemeCategory10[i]);
+
+            g.append("text")
+                .attr("transform", d => `translate(${arc.centroid(d)})`)
+                .attr("dy", ".35em")
+                .text(d => d.data.label);
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
         }
 
         // Load and process data
-        d3.tsv("data/WikiNews_sentiment.tsv").then(data => {
-            const uniqueWords = new Map();
-            data.forEach(d => {
-                if (!uniqueWords.has(d.text)) {
-                    uniqueWords.set(d.text, {
-                        text: d.text,
-                        sentiment: +d.sentiment,
-                        frequency: +d.frequency,
-                        year: +d.year,
-                        size: Math.sqrt(+d.frequency) * 10
-                    });
-                }
+        function loadData(dataset) {
+            d3.tsv(`data/${dataset}`).then(data => {
+                const uniqueWords = new Map();
+                data.forEach(d => {
+                    if (!uniqueWords.has(d.text)) {
+                        uniqueWords.set(d.text, {
+                            text: d.text,
+                            sentiment: +d.sentiment,
+                            frequency: +d.frequency,
+                            year: +d.year,
+                            size: Math.sqrt(+d.frequency) * 10
+                        });
+                    }
+                });
+                words = Array.from(uniqueWords.values());
+                
+                // Update year range based on the dataset
+                const years = words.map(d => d.year);
+                yearRange = { min: Math.min(...years), max: Math.max(...years) };
+                yearSlider.noUiSlider.updateOptions({
+                    range: {
+                        min: yearRange.min,
+                        max: yearRange.max
+                    },
+                    start: yearRange.min
+                });
+                d3.select("#yearValue").text(yearRange.min);
+                
+                updateFilters();
+            }).catch(error => {
+                console.error("Error loading data:", error);
             });
-            words = Array.from(uniqueWords.values());
-            
-            updateFilters();
-        }).catch(error => {
-            console.error("Error loading data:", error);
-        });
+        }
 
         // Add event listeners
-        d3.select("#positiveThreshold").on("input", updateFilters);
-        d3.select("#negativeThreshold").on("input", updateFilters);
-        d3.select("#yearSlider").on("input", updateFilters);
+        d3.select("#datasetSelector").on("change", function() {
+            loadData(this.value);
+        });
+
+        // Create separate SVGs for positive and negative word clouds
+        d3.select("#wordcloud").append("svg").attr("class", "positive").attr("width", width).attr("height", height / 2);
+        d3.select("#wordcloud").append("svg").attr("class", "negative").attr("width", width).attr("height", height / 2).attr("y", height / 2);
+
+        // Load initial dataset
+        loadData("WikiNews_sentiment.tsv");
     </script>
 </body>
 </html>
