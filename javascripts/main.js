@@ -6,7 +6,7 @@ var svg = d3.select("body").append('svg')
         width: 1400,
         height: 660
     });
-var fileList = ["WikiNews", "Huffington", "CrooksAndLiars", "EmptyWheel", "Esquire", "FactCheck", "VIS_papers", "IMDB", "PopCha", "Cards_PC", "Cards_Fries", "QuantumComputing", "Sentiment", "TrueNews", "CNN_Articles"];
+var fileList = ["WikiNews", "Huffington", "CrooksAndLiars", "EmptyWheel", "Esquire", "FactCheck", "VIS_papers", "IMDB", "PopCha", "Cards_PC", "Cards_Fries", "QuantumComputing", 'RT_Sentiments', 'RT_Genres', 'RT_Directors', "true_Sentiments", "true_Keywords", "CNN_Sentiments", "CNN_Keywords", "CNN_Editors"]; //, "SocialMedia_Sent", "SocialMedia" , "Sentiment", "TrueNews"
 
 var initialDataset = "EmptyWheel";
 var categories = ["person", "location", "organization", "miscellaneous"];
@@ -71,10 +71,46 @@ function loadData() {
         categories = ["Comedy", "Drama", "Action", "Family"];
         loadAuthorData(draw, initTop);
     }
-    else if (fileName.indexOf("CNN_Articles") >= 0) {
-        categories = ["news", "entertainment", "health", "politics"];
+    else if (fileName.indexOf("CNN_Sentiments") >= 0) {
+        categories = ["Positive", "Neutral", "Negative"];
         loadAuthorData(draw, initTop);
     }
+    else if (fileName.indexOf("CNN_Editors") >= 0) {
+        categories = ["news", "sport", "entertainment", "health", "politics"];
+        loadAuthorData(draw, initTop);
+    }
+    else if (fileName.indexOf("CNN_Keywords") >= 0) {
+        categories = ["news", "sport", "politics"];
+        loadAuthorData(draw, initTop);
+    }
+    else if (fileName.indexOf("RT_Sentiments") >= 0) {
+        categories = ["Positive", "Neutral", "Negative"];
+        loadAuthorData(draw, initTop);
+    }
+    else if (fileName.indexOf("RT_Genres") >= 0) {
+        categories = ["Drama", "Comedy"];
+        loadAuthorData(draw, initTop);
+    }
+    else if (fileName.indexOf("RT_Directors") >= 0) {
+        categories = ["Steven Spielberg", "Clint Eastwood", "Ridley Scott", "Steven Soderbergh", "Ron Howard"];
+        loadAuthorData(draw, initTop);
+    } // true_Sentiments
+    else if (fileName.indexOf("true_Sentiments") >= 0) {
+        categories = ["Positive", "Neutral", "Negative"];
+        loadAuthorData(draw, initTop);
+    }
+    else if (fileName.indexOf("true_Keywords") >= 0) {
+        categories = ["worldnews", "politicsNews"];
+        loadAuthorData(draw, initTop);
+    }
+    // else if (fileName.indexOf("SocialMedia_Sent") >= 0) {
+    //     categories = ["Positive", "Neutral", "Negative"];
+    //     loadAuthorData(draw, initTop);
+    // }
+    // else if (fileName.indexOf("SocialMedia") >= 0) {
+    //     categories = ["Twitter", "Facebook", "Instagram"];
+    //     loadAuthorData(draw, initTop);
+    // }
     else if (fileName.indexOf("VIS") >= 0) {
         categories = ["Vis", "VAST", "InfoVis", "SciVis"];
         loadAuthorData(draw, initTop);
