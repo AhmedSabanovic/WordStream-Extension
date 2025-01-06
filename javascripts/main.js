@@ -6,7 +6,7 @@ var svg = d3.select("body").append('svg')
         width: 1400,
         height: 660
     });
-var fileList = ["WikiNews", "Huffington", "CrooksAndLiars", "EmptyWheel", "Esquire", "FactCheck", "VIS_papers", "IMDB", "PopCha", "Cards_PC", "Cards_Fries", "QuantumComputing", 'RT_Sentiments', 'RT_Genres', 'RT_Directors', "true_Sentiments", "true_Keywords", "CNN_Sentiments", "CNN_Keywords", "CNN_Editors"]; //, "SocialMedia_Sent", "SocialMedia" , "Sentiment", "TrueNews"
+var fileList = ["WikiNews", "Huffington", "CrooksAndLiars", "EmptyWheel", "Esquire", "FactCheck", "VIS_papers", "IMDB", "PopCha", "Cards_PC", "Cards_Fries", "QuantumComputing", 'RT_Sentiments', 'RT_Genres', 'RT_Directors', "Reddit_Sentiments", "CNN_Sentiments", "CNN_Keywords", "CNN_Editors"];
 
 var initialDataset = "EmptyWheel";
 var categories = ["person", "location", "organization", "miscellaneous"];
@@ -94,15 +94,19 @@ function loadData() {
     else if (fileName.indexOf("RT_Directors") >= 0) {
         categories = ["Steven Spielberg", "Clint Eastwood", "Ridley Scott", "Steven Soderbergh", "Ron Howard"];
         loadAuthorData(draw, initTop);
-    } // true_Sentiments
-    else if (fileName.indexOf("true_Sentiments") >= 0) {
+    } 
+    else if (fileName.indexOf("Reddit_Sentiments") >= 0) {
         categories = ["Positive", "Neutral", "Negative"];
         loadAuthorData(draw, initTop);
     }
-    else if (fileName.indexOf("true_Keywords") >= 0) {
-        categories = ["worldnews", "politicsNews"];
-        loadAuthorData(draw, initTop);
-    }
+    // else if (fileName.indexOf("true_Sentiments2") >= 0) {
+    //     categories = ["Positive", "Neutral", "Negative"];
+    //     loadAuthorData(draw, initTop);
+    // }
+    // else if (fileName.indexOf("true_Keywords") >= 0) {
+    //     categories = ["worldnews", "politicsNews"];
+    //     loadAuthorData(draw, initTop);
+    // }
     // else if (fileName.indexOf("SocialMedia_Sent") >= 0) {
     //     categories = ["Positive", "Neutral", "Negative"];
     //     loadAuthorData(draw, initTop);
