@@ -79,7 +79,10 @@ function initializeSliders() {
     const yearSlider = document.getElementById('yearSlider');
     noUiSlider.create(yearSlider, {
         start: 2004,
-        range: { min: 2004, max: 2014 },
+        range: {
+            'min': 2004,  
+            'max': 2014
+        },
         step: 1,
         tooltips: true,
         format: {
@@ -149,10 +152,12 @@ function loadData(dataset) {
     d3.tsv(`data/${dataset}`).then(data => {
         const uniqueWords = new Map();
         const categories = new Set();
+        const years = new Set();
 
         data.forEach(d => {
             if (!uniqueWords.has(d.text)) {
                 if (d.category) categories.add(d.category);
+                years.add(+d.year);
                 uniqueWords.set(d.text, {
                     text: d.text,
                     sentiment: +d.sentiment,
@@ -167,19 +172,23 @@ function loadData(dataset) {
         words = Array.from(uniqueWords.values());
         updateCategorySelector(Array.from(categories));
         
-        const years = words.map(d => d.year);
+        // Update year range based on dataset
+        const yearArray = Array.from(years);
         yearRange = {
-            min: Math.min(...years),
-            max: Math.max(...years)
+            min: Math.min(...yearArray),
+            max: Math.max(...yearArray)
         };
         
-        yearSlider.noUiSlider.updateOptions({
-            range: {
-                min: yearRange.min,
-                max: yearRange.max
-            },
-            start: yearRange.min
-        });
+        const yearSlider = document.getElementById('yearSlider');
+        if (yearSlider && yearSlider.noUiSlider) {
+            yearSlider.noUiSlider.updateOptions({
+                range: {
+                    'min': yearRange.min,
+                    'max': yearRange.max
+                },
+                start: yearRange.min
+            }, true); // true preserves the margin
+        }
         
         updateFilters();
     })
