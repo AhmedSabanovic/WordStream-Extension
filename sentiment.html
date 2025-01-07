@@ -24,374 +24,524 @@
     <link rel="stylesheet" type="text/css" href="styles/msdropdown/dd.css"/>
     <link rel="stylesheet" type="text/css" href="styles/d3.slider.css">
     <link rel="stylesheet" type="text/css" href="styles/main.css" media="screen"/>
-    <style>
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            margin: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background: #f5f5f5;
-            border-radius: 5px;
-        }
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center; /* Center the labels and sliders */
-            margin: 10px;
-        }
-        .control-group label {
-            margin-bottom: 30px; /* Increased margin below the label */
-        }
-        .slider {
-            width: 200px;
-            margin: 10px;
-        }
-        .wordcloud {
-            width: 1000px; /* Increased width */
-            height: 600px;
-            margin: 20px auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            position: relative;
-        }
-        .word {
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-        .word:hover {
-            opacity: 0.7;
-        }
-        .title {
-            text-align: center;
-            padding: 20px;
-        }
-        .button {
-            padding: 8px 16px;
-            margin: 0 5px;
-            text-decoration: none;
-            color: #333;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-        }
-        .button.active {
-            background: #007bff;
-            color: white;
-        }
-        .legend {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .legend div {
-            width: 100px;
-            height: 20px;
-            text-align: center;
-            line-height: 20px;
-            margin: 0 5px;
-            color: white;
-        }
-        .legend .positive {
-            background: blue;
-        }
-        .legend .negative {
-            background: red;
-        }
-        .middle-line {
-            position: absolute;
-            top: 50%;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background: gray; /* Changed to gray */
-        }
-        /* Additional Styles for Category Selector */
-        #categorySelector {
-            width: 200px;
-            min-height: 100px;
-            padding: 5px;
-        }
-        #categorySelector option {
-            padding: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles/wstyles.css">
+    <link rel="stylesheet" href="styles/sstyles.css">
 </head>
 <body>
     <div class="title">
-        <a href="index.html" class="titleText">WordStream: Sentiment Analysis</a>
-        <a href="index.html" class="button still">Home</a>
-        <a href="sentiment.html" class="button active">Sentiment</a>
+        <a href="index.html" class="titleText">WordStream: Sentiment Stream &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </a>
+        <a href="sentiment.html" class="button active">Sentiment Stream</a>
+        <a href="Wordcloud sentiment.html" class="button still">Sentiment Cloud</a>
         <a href="examples.html" class="button still">Examples</a>
         <a href="video.html" class="button still">Video</a>
         <a href="index.html" class="button still">Demo</a>
     </div>
 
-    <div class="controls">
-        <div class="control-group">
-            <label>Dataset:</label>
-            <select id="datasetSelector">
-                <option value="WikiNews_sentiment.tsv">Wiki News</option>
-                <option value="CrooksAndLiars_sentiment.tsv">Crooks and Liars</option>
-                <option value="CNN_sentiment.tsv">CNN</option>
-                <option value="RottenTomatoes_sentiment.tsv">ROTTEN</option>
-            </select>
+    <div class="container">
+        <div class="sidebar">
+            <div class="control-group">
+                <label>Dataset</label>
+                <select id="datasetSelector">
+                    <option value="WikiNews_sentiment.tsv">Wiki News</option>
+                    <option value="CrooksAndLiars_sentiment.tsv">Crooks and Liars</option>
+                    <option value="CNN_sentiment.tsv">CNN</option>
+                    <option value="RottenTomatoes_sentiment.tsv">Rotten Tomatoes</option>
+                </select>
+            </div>
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="spinner"></div>
+            </div>
+            
+            <div class="control-group">
+                <label>Category</label>
+                <select id="categorySelector" multiple size="5">
+                    <option value="all">All Categories</option>
+                    <option value="location">Location</option>
+                    <option value="person">Person</option>
+                    <option value="organization">Organization</option>
+                    <option value="miscellaneous">Miscellaneous</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Positive Threshold</label>
+                <div id="positiveThreshold" class="slider"></div>
+            </div>
+            
+            <div class="control-group">
+                <label>Negative Threshold</label>
+                <div id="negativeThreshold" class="slider"></div>
+            </div>
         </div>
-        <div class="control-group">
-            <label>Category:</label>
-            <select id="categorySelector" multiple>
-                <option value="all">All Categories</option>
-                <option value="location">Location</option>
-                <option value="person">Person</option>
-                <option value="organization">Organization</option>
-                <option value="miscellaneous">Miscellaneous</option>
-            </select>
-        </div>
-        <div class="control-group">
-            <label>Year:</label>
-            <div id="yearSlider" class="slider"></div>
-        </div>
-        <div class="control-group">
-            <label>Positive Threshold:</label>
-            <div id="positiveThreshold" class="slider"></div>
-        </div>
-        <div class="control-group">
-            <label>Negative Threshold:</label>
-            <div id="negativeThreshold" class="slider"></div>
+
+        <div class="visualization">
+            <div id="wordstream" class="wordstream"></div>
         </div>
     </div>
-
-    <div id="wordcloud" class="wordcloud">
-        <div class="middle-line"></div>
+    <div id="modalBackdrop"></div>
+    <div id="detailModal">
+        <div class="modal-header">
+            <h3 class="modal-title">Word Sentiment Analysis</h3>
+            <button id="closeDetail">×</button>
+        </div>
+        <div class="modal-content">
+            <div class="chart-container">
+                <svg id="detailChart"></svg>
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="legend">
-        <div class="positive">Positive</div>
-        <div class="negative">Negative</div>
-    </div>
-
     <script>
-        // Global variables
-        let words = [];
-        const width = 1000; 
-        const height = 600;
-        const minFontSize = 30; 
-        const maxFontSize = 50; 
-        let yearRange = { min: 2004, max: 2014 }; 
         let selectedCategories = ['location', 'person', 'organization', 'miscellaneous'];
-
-        // Color scale
-        const colorScale = d3.scaleSequential()
-            .domain([0, 1])
-            .interpolator(d3.interpolateRdBu);
-
-        // Word cloud layout for positive words
-        const layoutPositive = d3.layout.cloud()
-            .size([width, height / 2])
-            .padding(2) 
-            .rotate(() => 0)
-            .font("Arial")
-            .fontSize(d => Math.max(Math.sqrt(d.frequency) * 10, minFontSize))
-            .on("end", drawPositive);
-
-        // Word cloud layout for negative words
-        const layoutNegative = d3.layout.cloud()
-            .size([width, height / 2])
-            .padding(2) 
-            .rotate(() => 0)
-            .font("Arial")
-            .fontSize(d => Math.max(Math.sqrt(d.frequency) * 10, minFontSize))
-            .on("end", drawNegative);
-
-        // Draw function for positive words
-        function drawPositive(words) {
-            const svg = d3.select("#wordcloud svg.positive");
-            svg.selectAll("*").remove();
-
-            svg.append("g")
-                .attr("transform", `translate(${width / 2},${height / 4})`)
-                .selectAll("text")
-                .data(words)
-                .enter().append("text")
-                .attr("class", "word")
-                .style("font-size", d => `${Math.min(d.size, maxFontSize)}px`)
-                .style("font-family", "Arial")
-                .style("fill", d => colorScale(d.sentiment))
-                .attr("text-anchor", "middle")
-                .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
-                .text(d => d.text)
-                .style("opacity", 0)
-                .transition()
-                .duration(1000)
-                .style("opacity", 1);
-        }
-
-        // Draw function for negative words
-        function drawNegative(words) {
-            const svg = d3.select("#wordcloud svg.negative");
-            svg.selectAll("*").remove();
-
-            svg.append("g")
-                .attr("transform", `translate(${width / 2},${height / 4})`)
-                .selectAll("text")
-                .data(words)
-                .enter().append("text")
-                .attr("class", "word")
-                .style("font-size", d => `${Math.min(d.size, maxFontSize)}px`)
-                .style("font-family", "Arial")
-                .style("fill", d => colorScale(d.sentiment))
-                .attr("text-anchor", "middle")
-                .attr("transform", d => `translate(${d.x},${d.y})rotate(${d.rotate})`)
-                .text(d => d.text)
-                .style("opacity", 0)
-                .transition()
-                .duration(1000)
-                .style("opacity", 1);
-        }
-
-        // Initialize noUiSlider components
-        const yearSlider = document.getElementById('yearSlider');
-        noUiSlider.create(yearSlider, {
-            start: 2004,
-            range: {
-                min: 2004,
-                max: 2014
-            },
-            step: 1,
-            tooltips: true,
-            format: {
-                to: value => Math.round(value),
-                from: value => Math.round(value)
-            }
-        });
-
-        const positiveThreshold = document.getElementById('positiveThreshold');
-        noUiSlider.create(positiveThreshold, {
-            start: 0.7,
-            range: {
-                min: 0.6,
-                max: 1.0
-            },
-            step: 0.05,
-            tooltips: true,
-            format: {
-                to: value => value.toFixed(2),
-                from: value => parseFloat(value)
-            }
-        });
-
-        const negativeThreshold = document.getElementById('negativeThreshold');
-        noUiSlider.create(negativeThreshold, {
-            start: 0.3,
-            range: {
-                min: 0,
-                max: 0.4
-            },
-            step: 0.05,
-            tooltips: true,
-            format: {
-                to: value => value.toFixed(2),
-                from: value => parseFloat(value)
-            }
-        });
-
-        // Attach event listeners after initialization
-        yearSlider.noUiSlider.on('update', updateFilters);
-        positiveThreshold.noUiSlider.on('update', updateFilters);
-        negativeThreshold.noUiSlider.on('update', updateFilters);
-
-        // Update filters based on current selections
-        function updateFilters() {
-            const posThreshold = +positiveThreshold.noUiSlider.get();
-            const negThreshold = +negativeThreshold.noUiSlider.get();
-            const selectedYear = +yearSlider.noUiSlider.get();
-            
-            d3.select("#positiveValue").text(posThreshold.toFixed(2));
-            d3.select("#negativeValue").text(negThreshold.toFixed(2));
-            d3.select("#yearValue").text(selectedYear);
-            
-            const filteredWords = words.filter(d => 
-                d.year === selectedYear && 
-                selectedCategories.includes(d.category)
-            );
-            
-            const positiveWords = filteredWords
-                .filter(d => d.sentiment >= posThreshold)
-                .slice(0, 20);
-            
-            const negativeWords = filteredWords
-                .filter(d => d.sentiment <= negThreshold)
-                .slice(0, 20);
-            
-            layoutPositive.words(positiveWords).start();
-            layoutNegative.words(negativeWords).start();
-        }
-
-        // Load and process data
+        let margin = { left: 100, right: 100, top: 20, bottom: 40 };
+        let width = 4000;
+        let height = 1200;
+        let words = [];
+        
         function loadData(dataset) {
             d3.tsv(`data/${dataset}`).then(data => {
+                allData = data.map(d => ({
+                    text: d.text,
+                    sentiment: +d.sentiment,
+                    frequency: +d.frequency,
+                    year: +d.year,
+                    category: d.category || 'miscellaneous'
+                }));
+
+                // Summarize for main visualization
                 const uniqueWords = new Map();
-                data.forEach(d => {
+                allData.forEach(d => {
                     if (!uniqueWords.has(d.text)) {
-                        uniqueWords.set(d.text, {
-                            text: d.text,
-                            sentiment: +d.sentiment,
-                            frequency: +d.frequency,
-                            year: +d.year,
-                            category: d.category,
-                            size: Math.sqrt(+d.frequency) * 10
-                        });
+                        uniqueWords.set(d.text, d);
                     }
                 });
                 words = Array.from(uniqueWords.values());
-                
-                // Update year range based on the dataset
-                const years = words.map(d => d.year);
-                yearRange = { min: Math.min(...years), max: Math.max(...years) };
-                yearSlider.noUiSlider.updateOptions({
-                    range: {
-                        min: yearRange.min,
-                        max: yearRange.max
-                    },
-                    start: yearRange.min
+                updateVisualization();
+            });
+        }
+        function showDetail(wordText) {
+            const modal = document.getElementById("detailModal");
+            const backdrop = document.getElementById("modalBackdrop");
+            const loadingSpinner = document.querySelector(".loading-spinner");
+            
+            backdrop.style.display = "block";
+            modal.style.display = "block";
+            loadingSpinner.classList.add("active");
+            setTimeout(() => modal.classList.add("active"), 10);
+            
+            document.querySelector(".modal-title").textContent = `Sentiment Analysis: "${wordText}"`;
+
+            // Setup dimensions
+            const margin = {top: 40, right: 40, bottom: 50, left: 60};
+            const width = 800 - margin.left - margin.right;
+            const height = 500 - margin.top - margin.bottom;
+
+            // Create SVG
+            const detailSvg = d3.select("#detailChart")
+                .html("")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Create gradient
+            const gradient = detailSvg.append("defs")
+                .append("linearGradient")
+                .attr("id", "area-gradient")
+                .attr("x1", "0%").attr("y1", "100%")
+                .attr("x2", "0%").attr("y2", "0%");
+
+            gradient.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", "#4682b4")
+                .attr("stop-opacity", 0.1);
+            
+            gradient.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", "#4682b4")
+                .attr("stop-opacity", 0.4);
+
+            // Process data
+            const dataForWord = allData.filter(d => d.text === wordText)
+                .sort((a,b) => a.year - b.year);
+
+            // Create scales
+            const xScale = d3.scaleLinear()
+                .domain(d3.extent(dataForWord, d => d.year))
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 1])
+                .range([height, 0]);
+
+            // Add grid
+            detailSvg.append("g")
+                .attr("class", "grid")
+                .attr("opacity", 0.1)
+                .call(d3.axisLeft(yScale)
+                    .tickSize(-width)
+                    .tickFormat(""));
+
+            // Add axes
+            detailSvg.append("g")
+                .attr("class", "x-axis")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale).tickFormat(d3.format("d")));
+
+            detailSvg.append("g")
+                .attr("class", "y-axis")
+                .call(d3.axisLeft(yScale));
+
+            // Add labels
+            detailSvg.append("text")
+                .attr("x", width/2)
+                .attr("y", height + 40)
+                .attr("text-anchor", "middle")
+                .text("Year");
+
+            detailSvg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height/2)
+                .attr("y", -45)
+                .attr("text-anchor", "middle")
+                .text("Sentiment Score");
+
+            // Create line and area
+            const line = d3.line()
+                .x(d => xScale(d.year))
+                .y(d => yScale(d.sentiment))
+                .curve(d3.curveMonotoneX);
+
+            const area = d3.area()
+                .x(d => xScale(d.year))
+                .y0(height)
+                .y1(d => yScale(d.sentiment))
+                .curve(d3.curveMonotoneX);
+
+            // Add area
+            detailSvg.append("path")
+                .datum(dataForWord)
+                .attr("class", "area")
+                .attr("d", area)
+                .style("fill", "url(#area-gradient)");
+
+            // Add line with animation
+            const path = detailSvg.append("path")
+                .datum(dataForWord)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 3)
+                .attr("d", line);
+
+            const totalLength = path.node().getTotalLength();
+            path.attr("stroke-dasharray", totalLength)
+                .attr("stroke-dashoffset", totalLength)
+                .transition()
+                .duration(1500)
+                .attr("stroke-dashoffset", 0);
+
+            // Add interactive points
+            detailSvg.selectAll(".dot")
+                .data(dataForWord)
+                .enter()
+                .append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.year))
+                .attr("cy", d => yScale(d.sentiment))
+                .attr("r", 6)
+                .style("fill", "white")
+                .style("stroke", "steelblue")
+                .style("stroke-width", 2)
+                .style("opacity", 0)
+                .transition()
+                .delay((d, i) => i * 100)
+                .duration(500)
+                .style("opacity", 1)
+                .on("mouseover", function(event, d) {
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .attr("r", 8)
+                        .style("fill", "steelblue");
+
+                    detailSvg.append("text")
+                        .attr("class", "tooltip")
+                        .attr("x", xScale(d.year))
+                        .attr("y", yScale(d.sentiment) - 15)
+                        .attr("text-anchor", "middle")
+                        .text(`${d.year}: ${d.sentiment.toFixed(3)}`);
+                })
+                .on("mouseout", function() {
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .attr("r", 6)
+                        .style("fill", "white");
+                    
+                    detailSvg.selectAll(".tooltip").remove();
                 });
-                d3.select("#yearValue").text(yearRange.min);
+
+            loadingSpinner.classList.remove("active");
+        }
+        document.getElementById("closeDetail").onclick = () => {
+            const modal = document.getElementById("detailModal");
+            const backdrop = document.getElementById("modalBackdrop");
+            
+            modal.classList.remove("active");
+            setTimeout(() => {
+                modal.style.display = "none";
+                backdrop.style.display = "none";
+            }, 300);
+        };
+        document.getElementById("modalBackdrop").onclick = () => {
+            document.getElementById("closeDetail").click();
+        };
+
+        const svg = d3.select("#wordstream")
+            .append("svg")
+            .attr("width", 4000)
+            .attr("height", 1000);
+
+        const colorScale = d3.scaleSequential()
+            .domain([0, 1])
+            .interpolator(t => {
+                if (t <= 0.4) {  
+                    const intensity = t / 0.4;  
+                    return d3.interpolateRgb("#DC143C", "#FF4444")(intensity);
+                } else if (t >= 0.6) {  
+                    const intensity = (t - 0.6) / 0.4;  
+                    return d3.interpolateRgb("#4169E1", "#1E90FF")(intensity);
+                } else {  
+                    return "#cccccc";  
+                }
+            });
+        function updateVisualization() {
+            svg.selectAll("*").remove();
+            const years = [...new Set(words.map(d => d.year))].sort();
+            const xScale = createTimeline(years);
+            
+            const posThreshold = +positiveThreshold.noUiSlider.get();
+            const negThreshold = +negativeThreshold.noUiSlider.get();
+            
+            // Grid system for collision detection
+            const occupiedSpaces = new Map();
+            const yearWidth = 140; // Width allocated per year
+            const verticalSpacing = 15;
+            
+            function checkCollision(x, y, width, height) {
+                const buffer = 5; // Reduced buffer space between words
+                const area = {
+                    left: x - width/2 - buffer,
+                    right: x + width/2 + buffer,
+                    top: y - height/2 - buffer,
+                    bottom: y + height/2 + buffer
+                };
                 
-                updateFilters();
-            }).catch(error => {
-                console.error("Error loading data:", error);
+                return Array.from(occupiedSpaces.values()).some(space => 
+                    !(area.left > space.right || 
+                    area.right < space.left || 
+                    area.top > space.bottom || 
+                    area.bottom < space.top)
+                );
+            }
+            
+            function addOccupiedSpace(id, x, y, width, height) {
+                occupiedSpaces.set(id, {
+                    left: x - width/2,
+                    right: x + width/2,
+                    top: y - height/2,
+                    bottom: y + height/2
+                });
+            }
+
+            years.forEach(year => {
+                const yearWords = words.filter(w => w.year === year);
+                const baseX = xScale(year);
+                
+                // Process positive words
+                const positiveWords = yearWords
+                    .filter(w => w.sentiment >= posThreshold)
+                    .sort((a, b) => b.frequency - a.frequency)
+                    .slice(0, 15);
+                    
+                let posY = height/2 - 40;
+                positiveWords.forEach((word, i) => {
+                    const fontSize = Math.min(Math.sqrt(word.frequency) * 3 + 10, 20);
+                    const wordWidth = word.text.length * fontSize * 0.6;
+                    const wordHeight = fontSize * 1.2;
+                    
+                    let placed = false;
+                    let attempts = 0;
+                    let testX = baseX;
+                    let testY = posY;
+                    
+                    while (!placed && attempts < 50) {
+                        testX = baseX + (Math.random() - 0.5) * yearWidth;
+                        testY = posY - attempts * verticalSpacing;
+                        if (testY - wordHeight / 2 < 0 || testY + wordHeight / 2 > height) {
+                            attempts++;
+                            continue;
+                        }
+                        
+                        if (!checkCollision(testX, testY, wordWidth, wordHeight)) {
+                            placed = true;
+                            addOccupiedSpace(`pos-${year}-${i}`, testX, testY, wordWidth, wordHeight);
+                            
+                            svg.append("text")
+                                .attr("class", "word")
+                                .attr("x", testX)
+                                .attr("y", testY)
+                                .attr("text-anchor", "middle")
+                                .style("font-size", `${fontSize}px`)
+                                .style("fill", colorScale(word.sentiment))
+                                .style("cursor", "pointer")
+                                .text(word.text)
+                                .on("click", () => showDetail(word.text))
+                                .on("mouseover", function() {
+                                    d3.select(this)
+                                        .transition()
+                                        .duration(200)
+                                        .style("font-size", `${fontSize * 1.2}px`);
+                                })
+                                .on("mouseout", function() {
+                                    d3.select(this)
+                                        .transition()
+                                        .duration(200)
+                                        .style("font-size", `${fontSize}px`);
+                                });
+                        }
+                        attempts++;
+                    }
+                });
+                
+                // Process negative words
+                const negativeWords = yearWords
+                    .filter(w => w.sentiment <= negThreshold)
+                    .sort((a, b) => a.frequency - b.frequency)
+                    .slice(0, 15);
+                    
+                let negY = height/2 + 50;
+                negativeWords.forEach((word, i) => {
+                    const fontSize = Math.min(Math.sqrt(word.frequency) * 3 + 10, 20);
+                    const wordWidth = word.text.length * fontSize * 0.6;
+                    const wordHeight = fontSize * 1.2;
+                    
+                    let placed = false;
+                    let attempts = 0;
+                    let testX = baseX;
+                    let testY = negY;
+                    
+                    while (!placed && attempts < 50) {
+                        testX = baseX + (Math.random() - 0.5) * yearWidth;
+                        testY = negY + attempts * verticalSpacing;
+                        if (testY - wordHeight / 2 < 0 || testY + wordHeight / 2 > height) {
+                            attempts++;
+                            continue;
+                        }
+                        
+                        if (!checkCollision(testX, testY, wordWidth, wordHeight)) {
+                            placed = true;
+                            addOccupiedSpace(`neg-${year}-${i}`, testX, testY, wordWidth, wordHeight);
+                            
+                            svg.append("text")
+                                .attr("class", "word")
+                                .attr("x", testX)
+                                .attr("y", testY)
+                                .attr("text-anchor", "middle")
+                                .style("font-size", `${fontSize}px`)
+                                .style("fill", colorScale(word.sentiment))
+                                .style("cursor", "pointer")
+                                .text(word.text)
+                                .on("click", () => showDetail(word.text))
+                                .on("mouseover", function() {
+                                    d3.select(this)
+                                        .transition()
+                                        .duration(200)
+                                        .style("font-size", `${fontSize * 1.2}px`);
+                                })
+                                .on("mouseout", function() {
+                                    d3.select(this)
+                                        .transition()
+                                        .duration(200)
+                                        .style("font-size", `${fontSize}px`);
+                                });
+                        }
+                        attempts++;
+                    }
+                });
             });
         }
 
-        // Add event listeners for dataset and category selectors
+        function createTimeline(years) {
+            const xScale = d3.scaleLinear()
+                .domain([d3.min(years), d3.max(years)])
+                .range([margin.left + 100, width - margin.right - 100]);
+
+            svg.append("line")
+                .attr("class", "timeline")
+                .attr("x1", margin.left)
+                .attr("x2", width - margin.right)
+                .attr("y1", height / 2)
+                .attr("y2", height / 2)
+                .style("stroke", "#333")
+                .style("stroke-width", "3px");
+
+            years.forEach(year => {
+                svg.append("text")
+                    .attr("class", "year-marker")
+                    .attr("x", xScale(year))
+                    .attr("y", height / 2 + 30)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#333")
+                    .style("font-size", "14px")
+                    .style("font-weight", "bold")
+                    .text(year);
+            });
+
+            return xScale;
+        }
+
+        // Initialize sliders
+        noUiSlider.create(positiveThreshold, {
+            start: 0.7,
+            range: { min: 0.6, max: 1.0 },
+            step: 0.05,
+            tooltips: true,
+            format: {
+                to: value => value.toFixed(2),
+                from: value => parseFloat(value)
+            }
+        });
+
+        noUiSlider.create(negativeThreshold, {
+            start: 0.3,
+            range: { min: 0, max: 0.4 },
+            step: 0.05,
+            tooltips: true,
+            format: {
+                to: value => value.toFixed(2),
+                from: value => parseFloat(value)
+            }
+        });
+
+        // Event listeners
+        positiveThreshold.noUiSlider.on('update', updateVisualization);
+        negativeThreshold.noUiSlider.on('update', updateVisualization);
+
+        d3.select("#categorySelector").on("change", function() {
+            const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
+            selectedCategories = selectedOptions.includes('all') ? 
+                ['location', 'person', 'organization', 'miscellaneous'] : 
+                selectedOptions;
+            updateVisualization();
+        });
+
         d3.select("#datasetSelector").on("change", function() {
             loadData(this.value);
         });
 
-        // Event listener for category selector
-        d3.select("#categorySelector").on("change", function() {
-            const selectedOptions = Array.from(this.selectedOptions).map(option => option.value);
-            
-            // If "All Categories" is selected, include all options
-            if (selectedOptions.includes('all')) {
-                selectedCategories = ['location', 'person', 'organization', 'miscellaneous'];
-            } else {
-                selectedCategories = selectedOptions;
-            }
-            
-            updateFilters(); 
-        });
-
-
-        // Select all categories by default
-        d3.select("#categorySelector").selectAll("option").property("selected", true);
-
-        // Create separate SVGs for positive and negative word clouds
-        d3.select("#wordcloud").append("svg").attr("class", "positive").attr("width", width).attr("height", height / 2);
-        d3.select("#wordcloud").append("svg").attr("class", "negative").attr("width", width).attr("height", height / 2).attr("y", height / 2);
-
-        // Load initial dataset
         loadData("WikiNews_sentiment.tsv");
     </script>
 </body>
