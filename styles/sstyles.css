@@ -13,12 +13,13 @@
 .noUi-horizontal .noUi-handle {
     top: -4px;  
 }
+
 .title {
     padding: 20px;
     display: block;
-    text-align: right;
-    
+    text-align: left;
 }
+
 .container {
     display: flex;
     width: 100%;
@@ -28,19 +29,22 @@
 .sidebar {
     position: fixed;
     left: 0;
-    top: 0;
+    top: 80px;
     width: 250px;
-    height: 100vh;
+    height: calc(100vh - 80px);
     background: white;
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .visualization {
-    margin-left: 250px; /* Same as sidebar width */
+    margin-left: 250px;
     width: calc(100% - 250px);
+    height: calc(100vh - 100px);
     overflow-x: auto;
+    overflow-y: hidden;
     padding: 20px;
     scrollbar-width: thin;
     scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
@@ -63,9 +67,11 @@
 .visualization::-webkit-scrollbar-thumb:hover {
     background-color: rgba(155, 155, 155, 0.8);
 }
+
 .container::-webkit-scrollbar {
-    height: 8px;  /* Thin scrollbar */
+    height: 8px;
 }
+
 .container::-webkit-scrollbar-track {
     background: transparent;
     margin: 0 20px;
@@ -80,6 +86,7 @@
 .container::-webkit-scrollbar-thumb:hover {
     background-color: rgba(155, 155, 155, 0.8);
 }
+
 .controls {
     position: sticky;
     top: 0;
@@ -90,33 +97,41 @@
     justify-content: space-around;
     border-bottom: 1px solid #ccc;
 }
+
 .visualization {
-    padding-bottom: 20px;  /* Creates space for scrollbar */
+    padding-bottom: 20px;
 }
+
 .wordstream {
     width: 4000px;
-    height: 980px;
+    height: calc(100vh - 150px); 
     position: relative;
 }
+
 .timeline {
-    stroke: #666; /* Darker color */
-    stroke-width: 2px; /* Thicker line */
+    stroke: #666;
+    stroke-width: 2px;
 }
+
 .year-marker {
     font-size: 14px;
     fill: #666;
 }
+
 .word {
     cursor: pointer;
     transition: all 0.3s ease-out;
     opacity: 0.9;
 }
+
 .control-group {
     margin: 10px 0;
 }
+
 .slider {
     width: 200px;
 }
+
 #modalBackdrop {
     position: fixed;
     top: 0;
@@ -216,12 +231,15 @@
 .loading-spinner.active {
     display: block;
 }
+
 .bar {
     transition: fill 0.3s ease;
 }
+
 .bar:hover {
     fill: orange;
 }
+
 .x-axis-labels > text {
     transform: rotate(45deg);
     text-anchor: start;
