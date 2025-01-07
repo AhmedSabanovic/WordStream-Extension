@@ -102,5 +102,3 @@ Sentiment scores are represented with a diverging color scheme:
 - [Fake and Real News Dataset](https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset?resource=download)
 
 ---
-
-This README provides an overview of the WordStream-Extension project, detailing the datasets, preprocessing steps, visualizations, and the interactive features included in the extension. For more technical details, please consult the **Code Documentation**.
