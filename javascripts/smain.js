@@ -1,7 +1,7 @@
 let selectedCategories = ['location', 'person', 'organization', 'miscellaneous'];
 let margin = { left: 100, right: 100, top: 20, bottom: 40 };
 let width = 4000;
-let height = 1200;
+let height = window.innerHeight - 150; // Subtract space for header and padding
 let words = [];
 
 function loadData(dataset) {
