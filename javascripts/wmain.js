@@ -106,7 +106,7 @@ function initializeSliders() {
     const negativeThreshold = document.getElementById('negativeThreshold');
     noUiSlider.create(negativeThreshold, {
         start: 0.3,
-        range: { min: 0, max: 0.4 },
+        range: { min: 0, max: 0.45 },
         step: 0.05,
         tooltips: true,
         format: {
